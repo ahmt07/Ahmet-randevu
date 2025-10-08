@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Ahmet Tekeli Erkek Kuaförü - Randevu Sistemi</title>
+<style>
+:root{--bg:#0b1016;--panel:#0e141b;--text:#e6eaf0;--muted:#98a6b6;--stroke:#1c2735;--gold:#f4c756}
+*{box-sizing:border-box}html,body{height:100%}body{margin:0;background:#0c1117;color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial}
+.wrap{max-width:980px;margin:20px auto;padding:0 14px}
+.panel{background:#0f151c;border:1px solid var(--stroke);border-radius:16px;padding:16px;margin-top:14px}
+.header{display:flex;align-items:center;justify-content:space-between;gap:12px;background:#0f151c;border:1px solid var(--stroke);border-radius:16px;padding:14px 16px}
+.brand{display:flex;align-items:center;gap:12px}.title{font-weight:800}.subtitle{color:var(--muted);font-size:12px}
+.row{display:flex;gap:12px;flex-wrap:wrap}.row>*{flex:1 1 220px}
+input,select,button{width:100%;border-radius:12px;border:1px solid #2a384a;background:#0b1219;color:#e6eaf0;padding:10px 12px}
+.action{border:1px solid rgba(244,199,86,.45);background:#19222c;color:#ffd977;font-weight:900;border-radius:12px;padding:12px 16px;cursor:pointer}
+.modal{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.55);padding:16px;z-index:40}
+.modal.show{display:flex}.sheet{max-width:860px;width:100%;background:#0e141b;border:1px solid #1a2432;border-radius:16px;padding:14px}
+.tabs{display:flex;gap:8px;margin:4px 0 10px}.tab{flex:1;text-align:center;border:1px solid #273346;border-radius:10px;padding:10px 12px;background:#0b1219;color:#d9e1ea;font-weight:800;cursor:pointer}.tab.active{border-color:rgba(244,199,86,.5);background:#151d25;color:#ffe59a}
+.help{color:#95a3b5;font-size:12px;margin-top:8px}
+.smallrow{display:flex;gap:6px;align-items:center;margin:6px 0}
+.smallbtn{padding:8px 10px;border-radius:10px;border:1px solid #2a384a;background:#0b1219;color:#d9e1ea;cursor:pointer}
+.smallbtn.gold{border-color:rgba(244,199,86,.5);color:#ffe59a}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="header">
+    <div class="brand">
+      <div class="title">Ahmet Tekeli Erkek Kuaförü</div>
+      <div class="subtitle">Randevu Sistemi</div>
+    </div>
+    <div class="row" style="flex:0 0 auto">
+      <button class="action" id="openAdmin">🛠️ Admin</button>
+      <button class="action" id="openCustomer">👤 Müşteri</button>
+    </div>
+  </div>
+
+  <form class="panel" onsubmit="return false">
+    <legend>Randevu</legend>
+    <div class="row"><div><label>Berber</label><select id="qBarber"></select></div><div><label>Hizmet</label><select id="qService"></select></div></div>
+    <div class="row"><div><label>Tarih</label><input type="date" id="qDate"></div><div><label>Saat</label><select id="qTime"><option>Uygun saat için seçimleri yapın</option></select></div></div>
+    <div class="row"><div><label>Ad Soyad</label><input id="qName"></div><div><label>Telefon</label><input id="qPhone" placeholder="05xxxxxxxxx"></div></div>
+    <div class="row"><button type="button" class="action" id="qBook">Randevu Al</button><button type="button" class="action" id="qMine">Randevularım</button></div>
+  </form>
+
+  <div class="modal" id="cModal"><div class="sheet">
+    <h3>Müşteri – Giriş / Kayıt</h3>
+    <div class="tabs"><div class="tab active" data-ctab="c-login">Giriş</div><div class="tab" data-ctab="c-register">Kayıt Ol</div><div class="tab" data-ctab="c-my">Randevularım</div><div style="margin-left:auto"><button class="tab" id="cClose">Kapat</button></div></div>
+    <div id="c-login"><div class="row"><div><label>Telefon</label><input id="clPhone"></div><div><label>Şifre</label><input id="clPwd" type="password"></div></div><button class="action" id="btnLogin">Giriş Yap</button></div>
+    <div id="c-register" class="hidden"><div class="row"><div><label>Ad Soyad</label><input id="crName"></div><div><label>Telefon</label><input id="crPhone"></div></div><div class="row"><div><label>Şifre</label><input id="crPwd" type="password"></div></div><button class="action" id="btnRegister">Kayıt Ol</button></div>
+    <div id="c-my" class="hidden"><div id="myList"></div></div>
+  </div></div>
+
+  <div class="modal" id="aModal"><div class="sheet">
+    <h3>Admin Paneli</h3>
+    <div id="aGate"><div class="row"><div><input id="adUser" placeholder="admin"></div><div><input id="adPwd" type="password" placeholder="1234"></div></div><button class="action" id="btnAdminLogin">Giriş Yap</button></div>
+    <div id="aDash" class="hidden">
+      <div class="tabs"><div class="tab active" data-atab="a-settings">Ayarlar</div><div class="tab" data-atab="a-appts">Randevular</div><div class="tab" data-atab="a-new">Yeni</div></div>
+
+      <div id="a-settings">
+        <div class="row"><div><label>Başlangıç</label><input type="time" id="setStart"></div><div><label>Bitiş</label><input type="time" id="setEnd"></div><div><label>Slot (dk)</label><select id="setStep"><option>5</option><option>10</option><option>15</option><option>20</option><option>30</option></select></div></div>
+        <h4>Berberler</h4>
+        <div class="smallrow"><input id="newBarber" placeholder="Yeni berber"><button class="smallbtn gold" id="addBarber">Ekle</button></div>
+        <div id="barberList" class="help"></div>
+
+        <h4>Hizmetler</h4>
+        <div class="smallrow"><input id="svcName" placeholder="Ad"><input id="svcDur" type="number" min="5" step="5" value="30" style="max-width:120px"><button class="smallbtn gold" id="addService">Ekle</button></div>
+        <div id="serviceList" class="help"></div>
+
+        <div class="row"><button class="action" id="saveHours">Çalışma Saatlerini Kaydet</button></div>
+      </div>
+
+      <div id="a-appts" class="hidden">
+        <div class="help">Bu örnek minimal tablolu görünüm siz ister derseniz eklerim.</div>
+      </div>
+
+      <div id="a-new" class="hidden">
+        <div class="row"><div><input id="aname" placeholder="Müşteri"></div><div><input id="aphone" placeholder="05..."></div></div>
+        <div class="row"><div><select id="abarber"></select></div><div><select id="aservice"></select></div></div>
+        <div class="row"><div><input type="date" id="adate"></div><div><select id="atime"><option>Uygun saat için</option></select></div></div>
+        <button class="action" id="aCreate">Randevu Oluştur</button>
+      </div>
+    </div>
+  </div></div>
+
+</div>
+
+<script>
+const LS={users:'atk_users',appts:'atk_appts',settings:'atk_settings',session:'atk_session'};
+const defaults={workStart:'09:00',workEnd:'21:00',stepMin:10,barbers:['Ahmet','Ali','Mehmet'],services:[{id:'sac',name:'Saç Kesimi',duration:30},{id:'sakal',name:'Sakal',duration:20},{id:'sacsakal',name:'Saç + Sakal',duration:50}]};
+function load(k,f){try{return JSON.parse(localStorage.getItem(k))??f}catch(e){return f}}function save(k,v){localStorage.setItem(k,JSON.stringify(v))}
+function uid(){return Math.random().toString(36).slice(2,10)}function $(id){return document.getElementById(id)}function clean(p){return (p||'').replace(/\\D+/g,'')}
+function t2m(t){const [h,m]=t.split(':').map(Number);return h*60+m}function gen(st,en,step){const a=[];for(let x=t2m(st);x<=t2m(en);x+=step)a.push((String(Math.floor(x/60)).padStart(2,'0')+':'+String(x%60).padStart(2,'0')));return a}
+let users=load(LS.users,[]),appts=load(LS.appts,[]),settings=load(LS.settings,defaults),session=load(LS.session,null);
+const svcById=id=>(settings.services||[]).find(s=>s.id===id);
+function conflict({barber,date,start,duration}){const s=t2m(start),e=s+duration;return appts.some(a=>a.barber===barber&&a.date===date&&Math.max(s,t2m(a.time))<Math.min(e,t2m(a.time)+a.duration))}
+function freeTimes(barber,date,duration){if(!barber||!date||!duration)return[];return gen(settings.workStart,settings.workEnd,settings.stepMin).filter(t=>!conflict({barber,date,start:t,duration})&&t2m(t)+duration<=t2m(settings.workEnd))}
+function fillSelects(){qBarber.innerHTML='<option value=\"\">Farketmez</option>'+(settings.barbers||[]).map(b=>`<option>${b}</option>`).join('');qService.innerHTML='<option value=\"\">Hizmet seçin</option>'+(settings.services||[]).map(s=>`<option value=\"${s.id}\">${s.name} (${s.duration} dk)</option>`).join('');abarber.innerHTML=(settings.barbers||[]).map(b=>`<option>${b}</option>`).join('');aservice.innerHTML=(settings.services||[]).map(s=>`<option value=\"${s.id}\">${s.name} (${s.duration} dk)</option>`).join('')}
+['qBarber','qService','qDate'].forEach(id=>$(id).addEventListener('change',()=>{const b=qBarber.value||settings.barbers[0],d=qDate.value,svc=svcById(qService.value);qTime.innerHTML=(!b||!d||!svc)?'<option>Uygun saat için seçimleri yapın</option>':(freeTimes(b,d,svc.duration).map(x=>`<option>${x}</option>`).join('')||'<option>Uygun saat yok</option>')}));
+qBook.onclick=()=>{const barber=qBarber.value||settings.barbers[0],sid=qService.value,date=qDate.value,time=qTime.value,name=qName.value.trim(),phone=qPhone.value.trim();const svc=svcById(sid);if(!svc||!barber||!date||!time||!name||!phone){alert('Tüm alanlar zorunlu.');return}if(conflict({barber,date,start:time,duration:svc.duration})){alert('Saat dolu.');return}appts.push({id:uid(),userId:null,name,phone:clean(phone),barber,serviceId:sid,serviceName:svc.name,duration:svc.duration,date,time});save(LS.appts,appts);alert('Randevu oluşturuldu.')};
+
+openCustomer.onclick=()=>cModal.classList.add('show'); cClose.onclick=()=>cModal.classList.remove('show');
+function setCTab(x){['c-login','c-register','c-my'].forEach(id=>$(id).classList.toggle('hidden',id!==x));document.querySelectorAll('#cModal .tab').forEach(t=>t.classList.toggle('active',t.dataset.ctab===x))}
+document.querySelectorAll('#cModal .tab').forEach(t=>t.addEventListener('click',()=>setCTab(t.dataset.ctab)));
+btnRegister.onclick=()=>{const name=crName.value.trim(),phone=clean(crPhone.value),pwd=crPwd.value;if(!name||!phone||!pwd)return alert('Zorunlu.');if(users.some(u=>u.phone===phone))return alert('Kayıtlı.');const u={id:uid(),name,phone,pwd};users.push(u);save(LS.users,users);alert('Kayıt OK')};
+btnLogin.onclick=()=>{const phone=clean(clPhone.value),pwd=clPwd.value;const u=users.find(u=>u.phone===phone&&u.pwd===pwd);if(!u)return alert('Hatalı.');session={id:u.id};save(LS.session,session);alert('Giriş OK')};
+
+openAdmin.onclick=()=>aModal.classList.add('show');
+btnAdminLogin.onclick=()=>{if(adUser.value==='admin'&&adPwd.value==='1234'){aGate.classList.add('hidden');aDash.classList.remove('hidden');loadSettings();fillSelects()}else alert('Hatalı')};
+document.querySelectorAll('#aModal .tab').forEach(t=>t.addEventListener('click',()=>{['a-settings','a-appts','a-new'].forEach(id=>$(id).classList.toggle('hidden',id!==t.dataset.atab));document.querySelectorAll('#aModal .tab').forEach(x=>x.classList.toggle('active',x.dataset.atab===t.dataset.atab))}));
+function loadSettings(){setStart.value=settings.workStart;setEnd.value=settings.workEnd;setStep.value=String(settings.stepMin);renderEditableLists()}
+saveHours.onclick=()=>{const st=setStart.value,en=setEnd.value,step=parseInt(setStep.value||'10');if(!st||!en||t2m(st)>=t2m(en))return alert('Saat aralığı yanlış');settings.workStart=st;settings.workEnd=en;settings.stepMin=step;save(LS.settings,settings);alert('Kaydedildi')};
+function renderEditableLists(){
+  barberList.innerHTML=(settings.barbers||[]).map((b,i)=>`<div class='smallrow'><input id='bar_in_${i}' value='${b}'/><button class='smallbtn gold' onclick='editBarber(${i})'>Kaydet</button><button class='smallbtn' onclick='removeBarber(${i})'>Sil</button></div>`).join('');
+  serviceList.innerHTML=(settings.services||[]).map((s,i)=>`<div class='smallrow'><input id='svc_name_${i}' value='${s.name}'/><input type='number' id='svc_dur_${i}' min='5' step='5' value='${s.duration}' style='max-width:110px'/><button class='smallbtn gold' onclick='editService(${i})'>Kaydet</button><button class='smallbtn' onclick='removeService(${i})'>Sil</button></div>`).join('');
+}
+window.editBarber=(i)=>{const v=document.getElementById('bar_in_'+i).value.trim();if(!v)return;settings.barbers[i]=v;save(LS.settings,settings);renderEditableLists();fillSelects()};
+window.removeBarber=(i)=>{settings.barbers.splice(i,1);save(LS.settings,settings);renderEditableLists();fillSelects()};
+window.editService=(i)=>{const n=document.getElementById('svc_name_'+i).value.trim();const d=parseInt(document.getElementById('svc_dur_'+i).value||'0');if(!n||!d)return;settings.services[i].name=n;settings.services[i].duration=d;save(LS.settings,settings);renderEditableLists();fillSelects()};
+window.removeService=(i)=>{settings.services.splice(i,1);save(LS.settings,settings);renderEditableLists();fillSelects()};
+
+(function(){if(!settings||!settings.barbers||!settings.services){settings=defaults;save(LS.settings,settings)}fillSelects()})(); 
+</script>
+</body>
+</html>
