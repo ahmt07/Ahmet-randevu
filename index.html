@@ -1,0 +1,667 @@
+
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Berber & Kuaför — Online Randevu</title>
+<style>
+  :root{
+    --bg:#0b0f19; --card:#111827; --ink:#e5e7eb; --muted:#9ca3af;
+    --line:#232a3a; --act:#22c55e; --red:#ef4444; --amber:#f59e0b; --blue:#60a5fa;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;font:15px/1.6 system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;color:var(--ink);background:radial-gradient(1200px 800px at 70% -10%, #1f2937 0%, #0b0f19 50%) fixed}
+  a{color:inherit}
+  button,input,select,textarea{font:inherit}
+  .wrap{max-width:min(1100px,100%);margin:0 auto;padding:24px}
+  .center-stage{min-height:100svh;display:grid;place-items:center}
+  .card{background:linear-gradient(180deg,#111827,#0e1422);border:1px solid var(--line);border-radius:16px;box-shadow:0 10px 30px rgba(0,0,0,.45)}
+  .p16{padding:16px} .p24{padding:24px} .p32{padding:32px}
+  .row{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+  .col{display:flex;flex-direction:column;gap:8px}
+  .grow{flex:1 1 240px}
+  .title{font-weight:700;font-size:20px}
+  .big{font-size:28px;letter-spacing:.2px}
+  .muted{color:var(--muted)}
+  .btn{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--line);background:#0d1321;color:var(--ink);padding:10px 14px;border-radius:12px;cursor:pointer}
+  .btn.primary{background:linear-gradient(180deg,#22c55e,#16a34a);border-color:#0e6b38;color:#031b0e;font-weight:600}
+  .btn.danger{background:linear-gradient(180deg,#ef4444,#b91c1c);border-color:#7f1d1d}
+  .btn.ghost{background:transparent}
+  .btn:disabled{opacity:.5;cursor:not-allowed}
+  input[type="text"],input[type="password"],input[type="tel"],input[type="number"],input[type="datetime-local"],input[type="date"],select,textarea{
+    width:100%;padding:12px 12px;border:1px solid var(--line);background:#0d1321;color:var(--ink);border-radius:10px;outline:none
+  }
+  .grid{display:grid;gap:12px}
+  .grid.cols-2{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .grid.cols-3{grid-template-columns:repeat(3,minmax(0,1fr))}
+  @media (max-width:800px){ .grid.cols-2,.grid.cols-3{grid-template-columns:1fr} }
+  .chip{font-size:12px;padding:6px 10px;border-radius:999px;border:1px solid var(--line);display:inline-flex;align-items:center;gap:6px}
+  .list{display:flex;flex-direction:column;gap:10px}
+  .list .row{justify-content:space-between;border:1px dashed #2b3448;padding:10px;border-radius:10px}
+  .tabs{display:flex;gap:6px;margin:12px 0}
+  .tabs button{padding:8px 12px;border-radius:10px;border:1px solid var(--line);background:#0d1321}
+  .tabs button.active{background:#1f2937}
+  .divider{height:1px;background:linear-gradient(90deg,transparent,#2b3448,transparent);margin:14px 0}
+  .kiosk{max-width:900px;width:100%}
+  .right{margin-left:auto}
+  .badge{background:#0d1321;border:1px solid var(--line);border-radius:8px;padding:4px 8px;font-size:12px}
+  .gallery{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:10px}
+  .gallery img{width:100%;height:100px;object-fit:cover;border-radius:10px;border:1px solid var(--line)}
+  .slot{padding:8px 10px;border:1px solid var(--line);border-radius:10px;cursor:pointer;text-align:center}
+  .slot.taken{opacity:.5;text-decoration:line-through}
+  .slot.selected{outline:2px solid var(--blue)}
+  .sticky-top{position:sticky;top:0;background:#0d1321;border-bottom:1px solid var(--line);padding:10px;z-index:5;border-radius:12px}
+  .notice{padding:10px 12px;border:1px solid #374151;background:#0d1321;border-radius:10px}
+  .mono{font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size:12px}
+
+  /* Modal */
+  .backdrop{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;place-items:center;z-index:50;padding:16px}
+  .modal{max-width:720px;width:100%;background:linear-gradient(180deg,#111827,#0e1422);border:1px solid var(--line);border-radius:16px;box-shadow:0 10px 40px rgba(0,0,0,.6)}
+  .modal .head{display:flex;justify-content:space-between;align-items:center;padding:16px 20px;border-bottom:1px solid var(--line)}
+  .modal .body{padding:20px}
+</style>
+</head>
+<body>
+<div class="wrap center-stage" id="authStage">
+  <div class="card p32 kiosk">
+    <div class="row" style="justify-content:center;margin-bottom:10px">
+      <div class="big">💈 Berber & Kuaför — Online Randevu</div>
+    </div>
+    <p class="muted" style="text-align:center;margin-top:-8px">Giriş yapın veya <b>Kayıt Ol</b> ile hesabınızı oluşturun.</p>
+
+    <!-- LOGIN ONLY ON FIRST VIEW -->
+    <div class="col" style="max-width:520px;margin:0 auto">
+      <div class="title">Üye Girişi</div>
+      <input id="loginPhone" type="tel" placeholder="Telefon (örn. 05xx...)" autocomplete="username">
+      <input id="loginPass" type="password" placeholder="Şifre" autocomplete="current-password">
+      <div class="row" style="justify-content:flex-end;margin-top:6px;gap:8px">
+        <button class="btn primary" onclick="login()">Giriş Yap</button>
+        <button class="btn" onclick="toggleRegister()" aria-haspopup="dialog">Kayıt Ol</button>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+    <div class="muted" style="text-align:center">Bu cihazda kayıtlı işletmeler</div>
+    <div id="localShops" class="row" style="justify-content:center;gap:8px"></div>
+
+  </div>
+</div>
+
+<!-- REGISTER MODAL -->
+<div id="regBackdrop" class="backdrop" aria-hidden="true">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="regTitle">
+    <div class="head">
+      <div class="title" id="regTitle">İşletme Kayıt</div>
+      <button class="btn ghost" onclick="toggleRegister()" aria-label="Kapat">✕</button>
+    </div>
+    <div class="body">
+      <div class="grid cols-2">
+        <div class="col">
+          <div class="muted">İşletme adı (örn. Ahmet Tekeli Erkek Kuaförü)</div>
+          <input id="regShopName" type="text" placeholder="İşletme adı">
+        </div>
+        <div class="col">
+          <div class="muted">Telefon (sadece size özel giriş için)</div>
+          <input id="regPhone" type="tel" placeholder="05xx...">
+        </div>
+        <div class="col">
+          <div class="muted">Şifre</div>
+          <input id="regPass" type="password" placeholder="Şifre">
+        </div>
+        <div class="col" style="display:flex;align-items:flex-end">
+          <button class="btn primary" onclick="registerShop()">Kayıt Ol</button>
+        </div>
+      </div>
+      <div class="divider"></div>
+      <div class="notice">
+        Kayıt sonrası <b>Üye Girişi</b> alanından telefon ve şifrenizle giriş yapabilirsiniz.
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- OWNER DASHBOARD -->
+<div class="wrap" style="display:none" id="ownerStage">
+  <div class="sticky-top row">
+    <div class="title">🏪 <span id="hdrShop"></span></div>
+    <span class="badge">Çoklu işletme (multi-tenant)</span>
+    <button class="btn right" onclick="logout()">Çıkış</button>
+  </div>
+
+  <div class="tabs">
+    <button id="tabSetup" class="active" onclick="openTab('setup')">Ayarlar</button>
+    <button id="tabServices" onclick="openTab('services')">Hizmetler</button>
+    <button id="tabBarbers" onclick="openTab('barbers')">Ustalar</button>
+    <button id="tabUploads" onclick="openTab('uploads')">Dosyalar</button>
+    <button id="tabBookings" onclick="openTab('bookings')">Randevular</button>
+    <button id="tabPublic" onclick="openTab('public')">Müşteri Sayfası</button>
+  </div>
+
+  <section id="tab-setup" class="card p24" style="margin-top:10px">
+    <div class="grid cols-3">
+      <div class="col">
+        <div class="title">İşletme Bilgileri</div>
+        <input id="shopName" type="text" placeholder="İşletme adı">
+        <input id="shopAddr" type="text" placeholder="Adres (opsiyonel)">
+        <input id="shopAbout" type="text" placeholder="Açıklama (opsiyonel)">
+      </div>
+      <div class="col">
+        <div class="title">Çalışma Saatleri</div>
+        <div class="row">
+          <div class="grow">
+            <label class="muted mono">Başlangıç</label>
+            <input id="workStart" type="time" value="09:00">
+          </div>
+          <div class="grow">
+            <label class="muted mono">Bitiş</label>
+            <input id="workEnd" type="time" value="20:00">
+          </div>
+        </div>
+        <div class="row">
+          <div class="grow">
+            <label class="muted mono">Slot (dk)</label>
+            <input id="slotMins" type="number" value="30" min="5" step="5">
+          </div>
+          <div class="grow">
+            <label class="muted mono">Maks. ileri gün</label>
+            <input id="maxDays" type="number" value="14" min="1" max="60">
+          </div>
+        </div>
+      </div>
+      <div class="col">
+        <div class="title">Bağlantılar</div>
+        <div class="notice">
+          <div><b>Müşteri sayfası</b> (randevu):</div>
+          <div class="mono" id="publicLink"></div>
+          <div class="divider"></div>
+          <div><b>Admin giriş sayfası</b> (sadece siz):</div>
+          <div class="mono" id="adminLink"></div>
+        </div>
+        <div class="row" style="gap:8px">
+          <button class="btn" onclick="copyPublicLink()">Müşteri linkini kopyala</button>
+          <button class="btn" onclick="copyAdminLink()">Admin linkini kopyala</button>
+        </div>
+        <button class="btn" style="margin-top:8px" onclick="openTab('public')">Müşteri sayfasını önizle</button>
+      </div>
+    </div>
+    <div class="divider"></div>
+    <button class="btn primary" onclick="saveSetup()">Kaydet</button>
+  </section>
+
+  <section id="tab-services" class="card p24" style="margin-top:10px;display:none">
+    <div class="row">
+      <div class="grow"><input id="svcName" type="text" placeholder="Hizmet adı (Saç + Sakal)"></div>
+      <div><input id="svcMins" type="number" min="5" step="5" value="30" style="width:130px" placeholder="Süre (dk)"></div>
+      <div><input id="svcPrice" type="number" min="0" step="1" value="0" style="width:130px" placeholder="₺ Fiyat"></div>
+      <button class="btn" onclick="addService()">Ekle</button>
+    </div>
+    <div class="list" id="svcList" style="margin-top:10px"></div>
+  </section>
+
+  <section id="tab-barbers" class="card p24" style="margin-top:10px;display:none">
+    <div class="row">
+      <div class="grow"><input id="barberName" type="text" placeholder="Usta adı"></div>
+      <div class="grow"><input id="barberNote" type="text" placeholder="Not (opsiyonel)"></div>
+      <button class="btn" onclick="addBarber()">Ekle</button>
+    </div>
+    <div class="list" id="barberList" style="margin-top:10px"></div>
+  </section>
+
+  <section id="tab-uploads" class="card p24" style="margin-top:10px;display:none">
+    <div class="row">
+      <input id="fileInput" type="file" multiple accept="image/*,.pdf,.doc,.docx,.xls,.xlsx">
+      <button class="btn" onclick="uploadFiles()">Yükle</button>
+      <span class="muted">Küçük dosyalar önerilir. Demo amaçlı olarak tarayıcıda tutulur.</span>
+    </div>
+    <div class="gallery" id="gallery" style="margin-top:12px"></div>
+  </section>
+
+  <section id="tab-bookings" class="card p24" style="margin-top:10px;display:none">
+    <div class="row">
+      <div class="title">Randevular</div>
+      <div class="right chip">Toplam: <span id="cntBookings">0</span></div>
+    </div>
+    <div id="bookingList" class="list" style="margin-top:10px"></div>
+  </section>
+
+  <section id="tab-public" class="card p24" style="margin-top:10px;display:none">
+    <div class="title">Müşteri Görünümü (İşletmenize özel)</div>
+    <div class="muted">Aşağıda müşterinizin göreceği sayfanın canlı önizlemesi vardır.</div>
+    <div id="publicPreview" style="margin-top:10px"></div>
+  </section>
+</div>
+
+<!-- PUBLIC CUSTOMER PAGE -->
+<div class="wrap" id="publicStage" style="display:none">
+  <div class="card p24 kiosk" id="publicCard">
+    <div class="row" style="justify-content:space-between">
+      <div>
+        <div class="title">💈 <span id="pubShop"></span></div>
+        <div class="muted" id="pubAbout"></div>
+      </div>
+      <div class="badge" id="pubAddr"></div>
+    </div>
+    <div class="divider"></div>
+    <div class="grid cols-3">
+      <div class="col">
+        <label>Hizmet</label>
+        <select id="pubService"></select>
+      </div>
+      <div class="col">
+        <label>Usta</label>
+        <select id="pubBarber"></select>
+      </div>
+      <div class="col">
+        <label>Gün</label>
+        <input id="pubDate" type="date">
+      </div>
+    </div>
+    <div class="divider"></div>
+    <div id="slots" class="grid cols-3"></div>
+    <div class="divider"></div>
+    <div class="grid cols-2">
+      <input id="custName" type="text" placeholder="Ad Soyad">
+      <input id="custPhone" type="tel" placeholder="Telefon">
+    </div>
+    <div class="row" style="margin-top:10px">
+      <button class="btn primary" onclick="confirmBooking()">Randevu Al</button>
+      <div class="chip">Seçim: <span id="selectedInfo" class="mono">—</span></div>
+    </div>
+    <div class="notice" style="margin-top:10px">
+      Not: Aynı dakika, aynı usta için çift randevu engellenir. Saatler işletme sahibinin belirlediği slotlara göre hesaplanır.
+    </div>
+  </div>
+</div>
+
+<script>
+// ============= HELPERS & STORAGE =============
+const DB_KEY = "bk_shops_v1";
+const Session = { phone:null, shopId:null };
+let AdminTarget = null;
+
+function loadDB(){ return JSON.parse(localStorage.getItem(DB_KEY)||"{}"); }
+function saveDB(db){ localStorage.setItem(DB_KEY, JSON.stringify(db)); }
+function genId(){ return Math.random().toString(36).slice(2,10); }
+function shopKey(phone){ return "shop_"+phone.replace(/\D/g,''); }
+function pad(n){ return (n<10?'0':'')+n; }
+function isoDate(d){ const y=d.getFullYear(), m=pad(d.getMonth()+1), da=pad(d.getDate()); return \`\${y}-\${m}-\${da}\`; }
+function fmtDay(s){ const d=new Date(s+"T00:00:00"); return d.toLocaleDateString('tr-TR',{weekday:'short', day:'2-digit', month:'2-digit'}); }
+
+// UTF-8 safe base64 for passwords
+function b64(s){ try{ return btoa(unescape(encodeURIComponent(s))); }catch(e){ return btoa(s);} }
+function eqPassHash(stored, plain){
+  const a = b64(plain);
+  if(stored===a) return true;
+  try{ if(stored===btoa(plain)) return true; }catch(e){}
+  return false;
+}
+
+// Modal toggle
+function toggleRegister(){
+  const bd = document.getElementById('regBackdrop');
+  const showing = bd.style.display==='grid';
+  bd.style.display = showing ? 'none' : 'grid';
+  if(!showing){ document.getElementById('regShopName')?.focus(); }
+}
+document.addEventListener('keydown', (e)=>{
+  if(e.key==='Escape'){
+    const bd = document.getElementById('regBackdrop');
+    if(bd && bd.style.display==='grid'){ bd.style.display='none'; }
+  }
+});
+
+// ============= AUTH =============
+function registerShop(){
+  const name = document.getElementById('regShopName').value.trim();
+  const phone = document.getElementById('regPhone').value.trim();
+  const pass = document.getElementById('regPass').value.trim();
+  if(!name || !phone || !pass){ alert('Eksik bilgi: tüm alanlar zorunlu.'); return; }
+  const key = shopKey(phone);
+  const db = loadDB();
+  if(db[key]){ alert('Bu telefonla kayıt zaten var. Giriş yapmayı deneyin.'); return; }
+  db[key] = {
+    id:key, ownerPhone:phone, passHash:b64(pass),
+    name, addr:'', about:'', work:{start:"09:00", end:"20:00", slot:30, maxDays:14},
+    services:[], barbers:[], uploads:[], bookings:[]
+  };
+  saveDB(db);
+  alert('Kayıt tamam! Şimdi giriş yapabilirsiniz.');
+  toggleRegister();
+  renderLocalShops();
+}
+function login(){
+  const phone = document.getElementById('loginPhone').value.trim();
+  const pass = document.getElementById('loginPass').value.trim();
+  const key = shopKey(phone);
+  if(AdminTarget && key !== AdminTarget){ alert('Bu bağlantı farklı bir işletmenin admin girişi içindir. Lütfen o işletmenin telefonuyla giriş yapın.'); return; }
+  const db = loadDB();
+  if(!db[key]){ alert('Kayıt bulunamadı. Önce Kayıt Ol'u deneyin.'); return; }
+  if(!eqPassHash(db[key].passHash, pass)){ alert('Şifre hatalı.'); return; }
+  Session.phone = phone; Session.shopId = key;
+  openOwner();
+}
+function logout(){
+  Session.phone=null; Session.shopId=null;
+  document.getElementById('ownerStage').style.display='none';
+  document.getElementById('publicStage').style.display='none';
+  document.getElementById('authStage').style.display='grid';
+  renderLocalShops();
+}
+
+// Enter-to-submit
+window.addEventListener('load', ()=>{
+  ['loginPhone','loginPass'].forEach(id=>{
+    const el=document.getElementById(id);
+    el && el.addEventListener('keydown', (e)=>{ if(e.key==='Enter') login(); });
+  });
+  ['regShopName','regPhone','regPass'].forEach(id=>{
+    const el=document.getElementById(id);
+    el && el.addEventListener('keydown', (e)=>{ if(e.key==='Enter') registerShop(); });
+  });
+});
+
+// ============= OWNER UI =============
+function openOwner(){
+  const db=loadDB(); const shop=db[Session.shopId];
+  if(!shop){ alert('Oturum bulunamadı'); return; }
+  document.getElementById('authStage').style.display='none';
+  document.getElementById('publicStage').style.display='none';
+  document.getElementById('ownerStage').style.display='block';
+  document.getElementById('hdrShop').textContent = shop.name;
+  document.getElementById('shopName').value = shop.name||'';
+  document.getElementById('shopAddr').value = shop.addr||'';
+  document.getElementById('shopAbout').value = shop.about||'';
+  document.getElementById('workStart').value = shop.work.start;
+  document.getElementById('workEnd').value = shop.work.end;
+  document.getElementById('slotMins').value = shop.work.slot;
+  document.getElementById('maxDays').value = shop.work.maxDays;
+  document.getElementById('publicLink').textContent = location.origin + location.pathname + "?shop=" + encodeURIComponent(shop.id);
+  document.getElementById('adminLink').textContent = location.origin + location.pathname + "?admin=" + encodeURIComponent(shop.id);
+  renderServices(); renderBarbers(); renderUploads(); renderBookings();
+  renderPublicPreview();
+}
+function saveSetup(){
+  const db=loadDB(); const shop=db[Session.shopId];
+  shop.name = document.getElementById('shopName').value.trim() || shop.name;
+  shop.addr = document.getElementById('shopAddr').value.trim();
+  shop.about = document.getElementById('shopAbout').value.trim();
+  shop.work.start = document.getElementById('workStart').value;
+  shop.work.end = document.getElementById('workEnd').value;
+  shop.work.slot = parseInt(document.getElementById('slotMins').value||30);
+  shop.work.maxDays = parseInt(document.getElementById('maxDays').value||14);
+  saveDB(db); openOwner();
+}
+function copyPublicLink(){
+  const link = document.getElementById('publicLink').textContent;
+  navigator.clipboard.writeText(link); alert('Bağlantı kopyalandı!');
+}
+function copyAdminLink(){
+  const link = document.getElementById('adminLink').textContent;
+  navigator.clipboard.writeText(link); alert('Admin bağlantısı kopyalandı!');
+}
+function openTab(name){
+  const tabs=['setup','services','barbers','uploads','bookings','public'];
+  tabs.forEach(t=>{
+    document.getElementById('tab-'+t).style.display = (t===name)?'block':'none';
+    document.getElementById('tab'+t.charAt(0).toUpperCase()+t.slice(1)).classList.toggle('active', t===name);
+  });
+  if(name==='public'){ renderPublicPreview(); }
+}
+
+// ============= SERVICES =============
+function addService(){
+  const n=document.getElementById('svcName').value.trim();
+  const m=parseInt(document.getElementById('svcMins').value||30);
+  const p=parseInt(document.getElementById('svcPrice').value||0);
+  if(!n){ alert('Hizmet adı gerekli'); return; }
+  const db=loadDB(); const shop=db[Session.shopId];
+  shop.services.push({id:genId(), name:n, mins:m, price:p});
+  saveDB(db); document.getElementById('svcName').value=''; renderServices();
+}
+function delService(id){
+  const db=loadDB(); const shop=db[Session.shopId];
+  shop.services = shop.services.filter(s=>s.id!==id);
+  saveDB(db); renderServices();
+}
+function renderServices(){
+  const db=loadDB(); const shop=db[Session.shopId];
+  const list=document.getElementById('svcList'); list.innerHTML='';
+  if(!shop.services.length){ list.innerHTML='<div class="muted">Hizmet ekleyin.</div>'; return; }
+  shop.services.forEach(s=>{
+    const row=document.createElement('div'); row.className='row';
+    row.innerHTML = \`
+      <div>\${s.name} <span class="chip">\${s.mins} dk</span> <span class="chip">₺\${s.price}</span></div>
+      <div><button class="btn danger" onclick="delService('\${s.id}')">Sil</button></div>\`;
+    list.appendChild(row);
+  });
+}
+
+// ============= BARBERS =============
+function addBarber(){
+  const n=document.getElementById('barberName').value.trim();
+  const note=document.getElementById('barberNote').value.trim();
+  if(!n){ alert('Usta adı gerekli'); return; }
+  const db=loadDB(); const shop=db[Session.shopId];
+  shop.barbers.push({id:genId(), name:n, note});
+  saveDB(db); document.getElementById('barberName').value=''; document.getElementById('barberNote').value=''; renderBarbers();
+}
+function delBarber(id){
+  const db=loadDB(); const shop=db[Session.shopId];
+  shop.barbers = shop.barbers.filter(b=>b.id!==id);
+  saveDB(db); renderBarbers();
+}
+function renderBarbers(){
+  const db=loadDB(); const shop=db[Session.shopId];
+  const list=document.getElementById('barberList'); list.innerHTML='';
+  if(!shop.barbers.length){ list.innerHTML='<div class="muted">Usta ekleyin.</div>'; return; }
+  shop.barbers.forEach(b=>{
+    const row=document.createElement('div'); row.className='row';
+    row.innerHTML = \`
+      <div>\${b.name} \${b.note?('<span class="chip">'+b.note+'</span>'):''}</div>
+      <div><button class="btn danger" onclick="delBarber('\${b.id}')">Sil</button></div>\`;
+    list.appendChild(row);
+  });
+}
+
+// ============= UPLOADS =============
+function uploadFiles(){
+  const inp=document.getElementById('fileInput'); const files=[...inp.files];
+  if(!files.length){ alert('Dosya seçin'); return; }
+  const db=loadDB(); const shop=db[Session.shopId];
+  const promises = files.map(f=> new Promise((res,rej)=>{
+    const r=new FileReader();
+    r.onload=()=>res({name:f.name, type:f.type, data:r.result});
+    r.onerror=rej; r.readAsDataURL(f);
+  }));
+  Promise.all(promises).then(items=>{
+    shop.uploads.push(...items); saveDB(db); renderUploads(); inp.value='';
+  });
+}
+function renderUploads(){
+  const db=loadDB(); const shop=db[Session.shopId];
+  const gal=document.getElementById('gallery'); gal.innerHTML='';
+  if(!shop.uploads.length){ gal.innerHTML='<div class="muted">Henüz dosya yok.</div>'; return; }
+  shop.uploads.forEach(u=>{
+    if(u.type.startsWith('image/')){
+      const img=document.createElement('img'); img.src=u.data; img.title=u.name; gal.appendChild(img);
+    } else {
+      const div=document.createElement('div'); div.className='chip'; div.textContent=u.name; gal.appendChild(div);
+    }
+  });
+}
+
+// ============= BOOKINGS (list) =============
+function renderBookings(){
+  const db=loadDB(); const shop=db[Session.shopId];
+  const list=document.getElementById('bookingList'); list.innerHTML='';
+  document.getElementById('cntBookings').textContent = shop.bookings.length;
+  if(!shop.bookings.length){ list.innerHTML='<div class="muted">Randevu yok.</div>'; return; }
+  shop.bookings.slice().reverse().forEach(b=>{
+    const svc = shop.services.find(s=>s.id===b.serviceId);
+    const barber = shop.barbers.find(x=>x.id===b.barberId);
+    const row=document.createElement('div'); row.className='row';
+    row.innerHTML = \`
+      <div>
+        <div><b>\${b.customer.name}</b> <span class="mono muted">\${b.customer.phone}</span></div>
+        <div class="muted">\${fmtDay(b.date)} • \${b.time} • \${barber?barber.name:'—'} • \${svc?svc.name:'—'}</div>
+      </div>
+      <div class="chip">ID: <span class="mono">\${b.id}</span></div>\`;
+    list.appendChild(row);
+  });
+}
+
+// ============= PUBLIC (customer) =============
+let Public = { shopId:null, selected:null };
+function renderPublic(shop){
+  document.getElementById('publicStage').style.display='block';
+  document.getElementById('authStage').style.display='none';
+  document.getElementById('ownerStage').style.display='none';
+  document.getElementById('pubShop').textContent = shop.name;
+  document.getElementById('pubAddr').textContent = shop.addr||'';
+  document.getElementById('pubAbout').textContent = shop.about||'';
+  const svcSel=document.getElementById('pubService'); svcSel.innerHTML='';
+  const barSel=document.getElementById('pubBarber'); barSel.innerHTML='';
+  shop.services.forEach(s=>{
+    const o=document.createElement('option'); o.value=s.id; o.textContent=s.name + " ("+s.mins+" dk)"; svcSel.appendChild(o);
+  });
+  shop.barbers.forEach(b=>{
+    const o=document.createElement('option'); o.value=b.id; o.textContent=b.name; barSel.appendChild(o);
+  });
+  const d=document.getElementById('pubDate');
+  const today = new Date(); today.setHours(0,0,0,0);
+  const max = new Date(today); max.setDate(max.getDate()+shop.work.maxDays);
+  d.min = isoDate(today); d.max = isoDate(max); d.value = d.min;
+  d.onchange = makeSlots;
+  svcSel.onchange = makeSlots; barSel.onchange = makeSlots;
+  makeSlots();
+}
+function makeSlots(){
+  const db=loadDB(); const shop=db[Public.shopId];
+  const svcId=document.getElementById('pubService').value;
+  const svc = shop.services.find(s=>s.id===svcId) || {mins:shop.work.slot};
+  const barberId=document.getElementById('pubBarber').value;
+  const date=document.getElementById('pubDate').value;
+  const cont=document.getElementById('slots'); cont.innerHTML='';
+  if(!date){ return; }
+  const [sh,sm]=shop.work.start.split(':').map(Number);
+  const [eh,em]=shop.work.end.split(':').map(Number);
+  let cur=new Date(date+"T"+pad(sh)+":"+pad(sm));
+  const end=new Date(date+"T"+pad(eh)+":"+pad(em));
+  const taken = new Set(shop.bookings.filter(b=>b.date===date && (!barberId || b.barberId===barberId)).map(b=>b.time));
+  Public.selected=null; document.getElementById('selectedInfo').textContent='—';
+  while(cur<end){
+    const t = pad(cur.getHours())+":"+pad(cur.getMinutes());
+    const div=document.createElement('div'); div.className='slot'; div.textContent=t;
+    if(taken.has(t)) div.classList.add('taken');
+    div.onclick=()=>{
+      if(div.classList.contains('taken')) return;
+      [...cont.children].forEach(c=>c.classList.remove('selected'));
+      div.classList.add('selected'); Public.selected = {time:t, svcId, barberId, date};
+      document.getElementById('selectedInfo').textContent = date+" "+t;
+    };
+    cont.appendChild(div);
+    cur = new Date(cur.getTime() + (svc.mins||shop.work.slot)*60000);
+  }
+}
+function confirmBooking(){
+  if(!Public.selected){ alert('Önce saat seçin'); return; }
+  const name=document.getElementById('custName').value.trim();
+  const phone=document.getElementById('custPhone').value.trim();
+  if(!name || !phone){ alert('Ad ve telefon gerekli'); return; }
+  const db=loadDB(); const shop=db[Public.shopId];
+  const exists = shop.bookings.some(b=> b.date===Public.selected.date && b.time===Public.selected.time && b.barberId===Public.selected.barberId);
+  if(exists){ alert('Bu saat dolu.'); makeSlots(); return; }
+  const id=genId();
+  shop.bookings.push({
+    id, date:Public.selected.date, time:Public.selected.time,
+    serviceId:Public.selected.svcId, barberId:Public.selected.barberId,
+    customer:{name, phone}, createdAt:new Date().toISOString()
+  });
+  saveDB(db);
+  alert('Randevunuz alındı!'); 
+  document.getElementById('custName').value='';
+  document.getElementById('custPhone').value='';
+  makeSlots();
+}
+function renderPublicPreview(){
+  const db=loadDB(); const shop=db[Session.shopId];
+  const prev=document.getElementById('publicPreview'); prev.innerHTML='';
+  const iframe=document.createElement('iframe');
+  iframe.style.width='100%'; iframe.style.height='560px'; iframe.style.border='1px solid var(--line)'; iframe.style.borderRadius='12px';
+  const data = encodeURIComponent(buildPublicHTML(shop));
+  iframe.src = "data:text/html;charset=utf-8,"+data;
+  prev.appendChild(iframe);
+}
+function buildPublicHTML(shop){
+  return \`<!doctype html><html><head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1">
+  <style>body{margin:0;font:14px system-ui;background:#0b0f19;color:#e5e7eb}
+  .wrap{max-width:900px;margin:0 auto;padding:18px}
+  .card{background:#0e1422;border:1px solid #232a3a;border-radius:12px;padding:16px}
+  .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+  .grid{display:grid;gap:10px} .grid.c3{grid-template-columns:repeat(3,minmax(0,1fr))}
+  @media(max-width:800px){ .grid.c3{grid-template-columns:1fr} }
+  select,input,button{font:inherit;padding:10px;border-radius:10px;border:1px solid #2b3448;background:#0d1321;color:#e5e7eb}
+  .slot{padding:8px;border:1px solid #2b3448;border-radius:10px;text-align:center}
+  .taken{opacity:.5;text-decoration:line-through} .selected{outline:2px solid #60a5fa}
+  .badge{border:1px solid #2b3448;border-radius:8px;padding:4px 8px}
+  </style></head><body>
+  <div class=wrap>
+    <div class=card>
+      <div class=row style="justify-content:space-between">
+        <div><b>💈 \${shop.name}</b><div style="color:#9ca3af">\${shop.about||''}</div></div>
+        <div class=badge>\${shop.addr||''}</div>
+      </div>
+    </div>
+  </div>
+  <script>
+    window.parent.Public = {shopId:"\${shop.id}", selected:null};
+    window.parent.renderPublic(window.parent.loadDB()["\${shop.id}"]);
+  <\/script>
+  </body></html>\`;
+}
+
+// ============= ROUTER (public/admin deep link) =============
+(function init(){
+  const params=new URLSearchParams(location.search);
+  const pub=params.get('shop');
+  const adm=params.get('admin');
+  if(pub){
+    const db=loadDB(); const shop=db[pub];
+    if(!shop){ alert('İşletme bulunamadı'); return; }
+    Public.shopId=pub; renderPublic(shop); return;
+  }
+  if(adm){
+    const db=loadDB(); const shop=db[adm];
+    AdminTarget = adm;
+    if(shop){
+      const hdr = document.querySelector('#authStage .big');
+      if(hdr) hdr.textContent = '🔐 ' + shop.name + ' — Admin Giriş';
+      const lp = document.getElementById('loginPhone');
+      if(lp && shop.ownerPhone){ lp.placeholder = shop.ownerPhone; }
+    } else {
+      alert('Admin sayfası için işletme bulunamadı.');
+    }
+    return;
+  }
+})();
+
+// Local shops quick chips
+function renderLocalShops(){
+  const db=loadDB();
+  const cont=document.getElementById('localShops'); if(!cont) return;
+  cont.innerHTML='';
+  const shops = Object.values(db);
+  if(!shops.length){ cont.innerHTML='<span class="muted">—</span>'; return; }
+  shops.forEach(shop=>{
+    if(!shop || !shop.id) return;
+    const a=document.createElement('a'); a.href='?shop='+encodeURIComponent(shop.id); a.className='chip'; a.textContent='👤 '+shop.name;
+    const b=document.createElement('a'); b.href='?admin='+encodeURIComponent(shop.id); b.className='chip'; b.textContent='🔐 Admin';
+    const wrap=document.createElement('div'); wrap.className='row'; wrap.style.gap='6px'; wrap.appendChild(a); wrap.appendChild(b);
+    cont.appendChild(wrap);
+  });
+}
+renderLocalShops();
+</script>
+</body>
+</html>
