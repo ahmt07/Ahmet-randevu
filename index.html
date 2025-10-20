@@ -1,0 +1,533 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Berber & Kuaför — Randevu</title>
+<style>
+:root{--bg:#0b0f19;--ink:#e7eaf0;--muted:#a9b0c3;--line:#222a3d;--gold:#f4d27a;--gold2:#d4af37}
+*{box-sizing:border-box} html,body{margin:0;padding:0;color:var(--ink);font:15px/1.6 Arial,system-ui;background:#0b0f19;min-height:100vh}
+body:before{content:"";position:fixed;inset:0;background:url('logo.png') no-repeat center/220px;opacity:.22;filter:drop-shadow(0 6px 18px rgba(0,0,0,.5));pointer-events:none}
+.wrap{max-width:980px;margin:0 auto;padding:20px}
+.card{background:#0f1422cc;border:1px solid #2a334a;border-radius:14px;box-shadow:0 10px 28px rgba(0,0,0,.45);padding:18px}
+.center{min-height:90vh;display:grid;place-items:center}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.col{display:flex;flex-direction:column;gap:8px}
+input,select,button,textarea{font:inherit}
+input,select,textarea{width:100%;padding:10px;border:1px solid var(--line);background:#0d1321;color:var(--ink);border-radius:10px}
+textarea{min-height:70px;resize:vertical}
+button{padding:10px 14px;border-radius:10px;border:1px solid #3a455f;background:#0d1321;color:var(--ink);cursor:pointer}
+.primary{background:linear-gradient(180deg,var(--gold),var(--gold2));color:#1a1303;border-color:#7a6420;font-weight:bold}
+.muted{color:var(--muted)} .title{font-weight:700;font-size:20px} .hidden{display:none}
+.chip{display:inline-block;border:1px solid #2a334a;border-radius:999px;padding:4px 8px;font-size:12px;background:#0d1321}
+.badge{display:inline-block;border:1px solid #2a334a;border-radius:8px;padding:4px 8px;font-size:12px;background:#0d1321}
+.divider{height:1px;margin:12px 0;background:linear-gradient(90deg,transparent,#33405d,transparent)}
+.status{padding:3px 8px;border-radius:999px;font-size:12px;border:1px solid #2a334a}
+.s-pending{background:#2b2f4680} .s-ok{background:#164e3b} .s-cancel{background:#4b1d1d}
+.small{font-size:12px}
+.slotBtn{margin:4px}
+.inline{display:inline-flex;gap:6px;align-items:center}
+</style>
+</head>
+<body>
+
+<!-- AUTH -->
+<div id="auth" class="wrap center">
+  <div class="card" style="width:100%;max-width:520px">
+    <div class="row" style="justify-content:center">
+      <img src="logo.png" alt="" style="height:34px;opacity:.9">
+      <div style="font-size:22px;font-weight:700">Berber & Kuaför — Randevu</div>
+    </div>
+    <p class="muted" style="text-align:center;margin-top:6px">Giriş yapın veya <b>kayıt olun</b>.</p>
+
+    <div class="col">
+      <div class="title">Üye Girişi</div>
+      <input id="loginPhone" type="tel" placeholder="Telefon (05xx...)">
+      <input id="loginPass" type="password" placeholder="Şifre">
+      <div class="row" style="justify-content:flex-end">
+        <button class="primary" id="btnLogin">Giriş Yap</button>
+        <button id="btnShowReg">Kayıt Ol</button>
+      </div>
+    </div>
+
+    <div id="regBox" class="col hidden" style="margin-top:12px">
+      <div class="title">İşletme Kayıt</div>
+      <input id="regName" type="text" placeholder="İşletme adı">
+      <input id="regPhone" type="tel" placeholder="Telefon (05xx...)">
+      <input id="regPass" type="password" placeholder="Şifre">
+      <div class="row" style="justify-content:flex-end">
+        <button class="primary" id="btnRegister">Kayıt Ol</button>
+      </div>
+      <div id="regError" class="muted" style="color:#fca5a5"></div>
+    </div>
+
+    <div class="divider"></div>
+    <div class="muted" style="text-align:center">Bu cihazda kayıtlı işletmeler</div>
+    <div id="localShops" class="row" style="justify-content:center"></div>
+  </div>
+</div>
+
+<!-- OWNER (ÜYE) -->
+<div id="owner" class="wrap hidden">
+  <div class="card">
+    <div class="row" style="justify-content:space-between">
+      <div class="title">🏪 <span id="shopHdr"></span></div>
+      <div class="row" style="gap:6px">
+        <button class="chip" id="tabBtnBook" onclick="openOwnerTab('book')">Randevu Paneli</button>
+        <button class="chip" id="tabBtnManage" onclick="openOwnerTab('manage')">Yönetim Paneli</button>
+        <button id="btnLogout">Çıkış</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Randevu Paneli -->
+  <div id="ownerBook" class="card" style="margin-top:12px">
+    <div class="row">
+      <select id="admSvc" style="min-width:220px"></select>
+      <div class="badge">Fiyat: <span id="admPrice">₺0</span></div>
+      <select id="admBarber" style="min-width:180px"></select>
+      <input id="admDate" type="date" style="min-width:160px">
+    </div>
+    <div class="divider"></div>
+    <div id="admSlots"></div>
+    <div class="divider"></div>
+    <div class="row">
+      <input id="admCName" placeholder="Ad Soyad" style="min-width:220px">
+      <input id="admCPhone" placeholder="Telefon" style="min-width:180px">
+      <input id="admNote" placeholder="Not (opsiyonel)" style="min-width:260px">
+      <button class="primary" id="btnAdmBook" onclick="admConfirmBooking()">Randevu Al</button>
+      <div class="chip">Seçim: <span id="admSelInfo">—</span></div>
+    </div>
+  </div>
+
+  <!-- Yönetim Paneli -->
+  <div id="ownerManage" class="card" style="margin-top:12px">
+    <div class="row">
+      <div class="col" style="flex:1 1 320px">
+        <div class="title">Bağlantılar</div>
+        <div class="chip">Müşteri: <span id="pubLink"></span></div>
+        <div class="chip">Admin: <span id="admLink"></span></div>
+      </div>
+      <div class="col" style="flex:1 1 320px">
+        <div class="title">Çalışma</div>
+        <div class="row">
+          <input id="start" type="time" value="09:00" style="width:120px">
+          <input id="end" type="time" value="20:00" style="width:120px">
+          <input id="slot" type="number" value="30" min="5" step="5" style="width:90px" title="Slot (dk)">
+          <input id="maxDays" type="number" value="14" min="1" max="60" style="width:100px" title="Maks. ileri gün">
+        </div>
+        <button id="btnSave">Kaydet</button>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+    <div class="row">
+      <div class="col" style="flex:1 1 420px">
+        <div class="title">Hizmet</div>
+        <div class="row">
+          <input id="svcName" placeholder="Saç + Sakal">
+          <input id="svcMins" type="number" value="30" style="width:110px" title="Süre (dk)">
+          <input id="svcPrice" type="number" value="0" style="width:110px" title="Fiyat (₺)">
+          <button id="btnAddSvc">Ekle</button>
+        </div>
+        <div id="svcList" class="col"></div>
+      </div>
+
+      <div class="col" style="flex:1 1 420px">
+        <div class="title">Usta</div>
+        <div class="row"><input id="barberName" placeholder="Usta adı"><button id="btnAddBarber">Ekle</button></div>
+        <div id="barberList" class="col"></div>
+
+        <!-- Usta Tatil Yönetimi -->
+        <div class="divider"></div>
+        <div class="title">Usta Tatil / Kapalı Günleri</div>
+        <div class="row inline">
+          <label>Usta</label>
+          <select id="offBarberSel" style="min-width:160px"></select>
+        </div>
+        <div class="row small">
+          <div class="inline"><input type="checkbox" id="off0"><label for="off0">Paz</label></div>
+          <div class="inline"><input type="checkbox" id="off1"><label for="off1">Pzt</label></div>
+          <div class="inline"><input type="checkbox" id="off2"><label for="off2">Sal</label></div>
+          <div class="inline"><input type="checkbox" id="off3"><label for="off3">Çar</label></div>
+          <div class="inline"><input type="checkbox" id="off4"><label for="off4">Per</label></div>
+          <div class="inline"><input type="checkbox" id="off5"><label for="off5">Cum</label></div>
+          <div class="inline"><input type="checkbox" id="off6"><label for="off6">Cmt</label></div>
+        </div>
+        <div class="row">
+          <input id="offDate" type="date" style="width:160px">
+          <button id="btnAddOffDate">Tarih Ekle</button>
+          <button id="btnClearOffDates">Tarihleri Temizle</button>
+          <button id="btnSaveOff">Tatil Ayarını Kaydet</button>
+        </div>
+        <div id="offDatesList" class="small muted"></div>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+    <div class="row" style="justify-content:space-between;align-items:flex-end">
+      <div class="title">Randevular</div>
+      <div class="row">
+        <input id="fFrom" type="date" title="Başlangıç">
+        <input id="fTo" type="date" title="Bitiş">
+        <input id="fQuery" type="text" placeholder="Ara: ad, tel, usta, hizmet, durum" style="min-width:260px">
+        <button id="btnFilter">Filtrele</button>
+        <button id="btnClearFilter">Temizle</button>
+      </div>
+    </div>
+    <div id="bookList" class="col" style="margin-top:8px"></div>
+  </div>
+</div>
+
+<!-- PUBLIC (MÜŞTERİ) -->
+<div id="public" class="wrap hidden">
+  <div class="card">
+    <div class="row" style="justify-content:space-between">
+      <div class="title">💈 <span id="pubName"></span></div>
+      <div class="badge" id="pubAddr"></div>
+    </div>
+    <div class="divider"></div>
+    <div class="row">
+      <select id="selSvc" style="min-width:220px"></select>
+      <div class="badge">Fiyat: <span id="pubPrice">₺0</span></div>
+      <select id="selBarber" style="min-width:180px"></select>
+      <input id="selDate" type="date" style="min-width:160px">
+    </div>
+    <div class="divider"></div>
+    <div id="slots"></div>
+    <div class="divider"></div>
+    <div class="row">
+      <input id="cName" placeholder="Ad Soyad" style="min-width:220px">
+      <input id="cPhone" placeholder="Telefon" style="min-width:180px">
+      <input id="cNote" placeholder="Not (opsiyonel)" style="min-width:260px">
+      <button class="primary" id="btnBook">Randevu Al</button>
+      <div class="chip">Seçim: <span id="selInfo">—</span></div>
+    </div>
+    <div class="muted" style="margin-top:8px">Not: Randevular <b>Beklemede</b> olarak oluşturulur; salon onayladıktan sonra <b>Onaylı</b> olur.</div>
+  </div>
+</div>
+
+<script>
+/*** BASİT SAKLAMA ***/
+var DBKEY="bk_shops_v2"; // yeni alanlar için v2
+function loadDB(){ try{return JSON.parse(localStorage.getItem(DBKEY)||"{}");}catch(e){return {}} }
+function saveDB(db){ try{localStorage.setItem(DBKEY, JSON.stringify(db));}catch(e){ alert("Tarayıcı kaydetmeyi engelliyor (LocalStorage)."); } }
+function keyOf(phone){ return "shop_"+String(phone||"").replace(/\D/g,""); }
+function b64(s){ try{return btoa(unescape(encodeURIComponent(s)));}catch(e){return btoa(s);} }
+function eqHash(h, p){ try{ return h===b64(p) || h===btoa(p);}catch(e){return h===b64(p);} }
+function pad(n){ return (n<10?"0":"")+n; }
+
+/*** EKRAN GEÇİŞLERİ ***/
+function show(id){ ["auth","owner","public"].forEach(function(x){ document.getElementById(x).classList.add("hidden"); }); document.getElementById(id).classList.remove("hidden"); }
+
+/*** AUTH ***/
+document.getElementById("btnShowReg").onclick=function(){ document.getElementById("regBox").classList.toggle("hidden"); };
+document.getElementById("btnRegister").onclick=function(){
+  var name=document.getElementById("regName").value.trim();
+  var phR=document.getElementById("regPhone").value.trim();
+  var pass=document.getElementById("regPass").value.trim();
+  var err=document.getElementById("regError");
+  if(!name||!phR||!pass){ err.textContent="Eksik bilgi."; err.style.display="block"; return; }
+  var phone=phR.replace(/\D/g,""); if(phone.length<10){ err.textContent="Telefon hatalı."; err.style.display="block"; return; }
+  var db=loadDB(), k=keyOf(phone); if(db[k]){ err.textContent="Bu telefonla kayıt var."; err.style.display="block"; return; }
+  db[k]={id:k,ownerPhone:phone,pass:b64(pass),name:name,addr:"",about:"",
+         work:{start:"09:00",end:"20:00",slot:30,maxDays:14},
+         services:[],barbers:[],bookings:[]};
+  saveDB(db); err.style.display="none"; alert("Kayıt tamam! Giriş yapın.");
+  document.getElementById("loginPhone").value = phone[0]==="0" ? phone : "0"+phone;
+  document.getElementById("loginPass").focus(); renderLocal();
+};
+document.getElementById("btnLogin").onclick=function(){
+  var phone=document.getElementById("loginPhone").value.trim();
+  var pass=document.getElementById("loginPass").value.trim();
+  var k=keyOf(phone), db=loadDB();
+  if(!db[k]){ alert("Kayıt yok."); return; }
+  if(!eqHash(db[k].pass, pass)){ alert("Şifre hatalı."); return; }
+  window.__shopId=k; openOwner();
+};
+
+/*** OWNER ***/
+function openOwner(){
+  var db=loadDB(), s=db[__shopId]; if(!s){ alert("Bulunamadı"); return; }
+  // v1 verilerinden güncelleme (barber off alanları yoksa ekle)
+  s.barbers.forEach(function(b){ b.offDays = Array.isArray(b.offDays)?b.offDays:[]; b.offDates = Array.isArray(b.offDates)?b.offDates:[]; });
+  show("owner");
+  document.getElementById("shopHdr").textContent=s.name;
+  document.getElementById("pubLink").textContent=location.origin+location.pathname+"?shop="+encodeURIComponent(s.id);
+  document.getElementById("admLink").textContent=location.origin+location.pathname+"?admin="+encodeURIComponent(s.id);
+  document.getElementById("start").value=s.work.start; document.getElementById("end").value=s.work.end;
+  document.getElementById("slot").value=s.work.slot; document.getElementById("maxDays").value=s.work.maxDays||14;
+  renderServices(); renderBarbers(); fillOffBarberSel(); renderOffPanel(); renderBookings();
+  openOwnerTab('book'); renderAdmBooking();
+}
+document.getElementById("btnSave").onclick=function(){
+  var db=loadDB(), s=db[__shopId];
+  s.work.start=document.getElementById("start").value;
+  s.work.end=document.getElementById("end").value;
+  s.work.slot=parseInt(document.getElementById("slot").value||30,10);
+  s.work.maxDays=parseInt(document.getElementById("maxDays").value||14,10);
+  saveDB(db); openOwner();
+};
+document.getElementById("btnLogout").onclick=function(){ __shopId=null; show("auth"); renderLocal(); };
+function openOwnerTab(name){
+  document.getElementById('ownerBook').style.display = (name==='book')?'block':'none';
+  document.getElementById('ownerManage').style.display = (name==='manage')?'block':'none';
+  document.getElementById('tabBtnBook').classList.toggle('primary', name==='book');
+  document.getElementById('tabBtnManage').classList.toggle('primary', name==='manage');
+}
+
+/*** SERVICES ***/
+document.getElementById("btnAddSvc").onclick=function(){
+  var n=document.getElementById("svcName").value.trim();
+  var m=parseInt(document.getElementById("svcMins").value||30,10);
+  var pr=parseInt(document.getElementById("svcPrice").value||0,10);
+  if(!n){ alert("Hizmet adı gerekli"); return; }
+  var db=loadDB(), s=db[__shopId]; s.services.push({id:rid(),name:n,mins:m,price:pr}); saveDB(db);
+  document.getElementById("svcName").value=""; renderServices(); renderAdmBooking();
+};
+function renderServices(){
+  var db=loadDB(), s=db[__shopId], box=document.getElementById("svcList"); box.innerHTML="";
+  if(!s.services.length){ box.innerHTML='<div class="muted">Hizmet ekleyin.</div>'; return; }
+  s.services.forEach(function(x){
+    var d=document.createElement("div"); d.className="row";
+    d.innerHTML='<div class="chip">'+x.name+' ('+x.mins+' dk)</div><div class="chip">₺'+(x.price||0)+'</div>';
+    box.appendChild(d);
+  });
+}
+
+/*** BARBERS ***/
+document.getElementById("btnAddBarber").onclick=function(){
+  var n=document.getElementById("barberName").value.trim(); if(!n){ alert("Usta adı gerekli"); return; }
+  var db=loadDB(), s=db[__shopId]; s.barbers.push({id:rid(),name:n,offDays:[],offDates:[]}); saveDB(db);
+  document.getElementById("barberName").value=""; renderBarbers(); fillOffBarberSel(); renderAdmBooking();
+};
+function renderBarbers(){
+  var db=loadDB(), s=db[__shopId], box=document.getElementById("barberList"); box.innerHTML="";
+  if(!s.barbers.length){ box.innerHTML='<div class="muted">Usta ekleyin.</div>'; return; }
+  s.barbers.forEach(function(x){
+    var d=document.createElement("div"); d.className="row";
+    d.innerHTML='<div class="chip">'+x.name+'</div><div class="small muted">Haftalık izin: '+(x.offDays.join(',')||'—')+' • Özel kapalı: '+(x.offDates.length||0)+' gün</div>';
+    box.appendChild(d);
+  });
+}
+
+/*** USTA TATİL PANELİ ***/
+function fillOffBarberSel(){
+  var db=loadDB(), s=db[__shopId], sel=document.getElementById('offBarberSel'); sel.innerHTML='';
+  s.barbers.forEach(function(b){ var o=document.createElement('option'); o.value=b.id; o.textContent=b.name; sel.appendChild(o); });
+}
+function renderOffPanel(){
+  var db=loadDB(), s=db[__shopId], sel=document.getElementById('offBarberSel'); if(!s.barbers.length) return;
+  var b=s.barbers.filter(function(x){return x.id===sel.value})[0] || s.barbers[0];
+  sel.value=b.id;
+  for(var i=0;i<7;i++){ document.getElementById('off'+i).checked = (b.offDays||[]).indexOf(i)>=0; }
+  document.getElementById('offDatesList').textContent = (b.offDates||[]).join(', ') || '—';
+}
+document.getElementById('offBarberSel').onchange=renderOffPanel;
+document.getElementById('btnAddOffDate').onclick=function(){
+  var db=loadDB(), s=db[__shopId], id=document.getElementById('offBarberSel').value, dt=document.getElementById('offDate').value;
+  if(!dt) return; var b=s.barbers.filter(function(x){return x.id===id})[0]; if(!b.offDates) b.offDates=[];
+  if(b.offDates.indexOf(dt)<0) b.offDates.push(dt); saveDB(db); renderOffPanel();
+};
+document.getElementById('btnClearOffDates').onclick=function(){
+  var db=loadDB(), s=db[__shopId], id=document.getElementById('offBarberSel').value; var b=s.barbers.filter(function(x){return x.id===id})[0];
+  b.offDates=[]; saveDB(db); renderOffPanel();
+};
+document.getElementById('btnSaveOff').onclick=function(){
+  var db=loadDB(), s=db[__shopId], id=document.getElementById('offBarberSel').value; var b=s.barbers.filter(function(x){return x.id===id})[0];
+  b.offDays=[]; for(var i=0;i<7;i++){ if(document.getElementById('off'+i).checked) b.offDays.push(i); }
+  saveDB(db); renderBarbers(); alert('Usta tatil günleri kaydedildi.');
+};
+
+/*** OWNER: RANDEVU PANELİ ***/
+var __admSel=null;
+function renderAdmBooking(){
+  var db=loadDB(), s=db[__shopId]; if(!s) return;
+  var svc=document.getElementById('admSvc'), br=document.getElementById('admBarber');
+  svc.innerHTML=""; br.innerHTML="";
+  s.services.forEach(function(x){ var o=document.createElement("option"); o.value=x.id; o.textContent=x.name+" ("+x.mins+" dk)"; o.setAttribute('data-price', x.price||0); svc.appendChild(o); });
+  s.barbers.forEach(function(x){ var o=document.createElement("option"); o.value=x.id; o.textContent=x.name; br.appendChild(o); });
+  var d=document.getElementById('admDate'); var today=new Date(); today.setHours(0,0,0,0);
+  var max=new Date(today); max.setDate(max.getDate()+(s.work.maxDays||14));
+  d.min=today.toISOString().slice(0,10); d.max=max.toISOString().slice(0,10); d.value=d.min;
+  function updatePrice(){ var opt=svc.options[svc.selectedIndex]; document.getElementById('admPrice').textContent='₺'+(opt?opt.getAttribute('data-price'):0); }
+  svc.onchange=function(){ updatePrice(); makeAdmSlots(); }; br.onchange=makeAdmSlots; d.onchange=makeAdmSlots; updatePrice(); makeAdmSlots();
+}
+function rid(){ return Math.random().toString(36).slice(2,8); }
+function isBarberClosed(barber, dateStr){
+  var d=new Date(dateStr+"T00:00:00"); var wd=d.getDay(); // 0=Sun .. 6=Sat
+  if((barber.offDays||[]).indexOf(wd)>=0) return true;
+  if((barber.offDates||[]).indexOf(dateStr)>=0) return true;
+  return false;
+}
+function makeAdmSlots(){
+  var db=loadDB(), s=db[__shopId]; if(!s) return;
+  var svcSel=document.getElementById('admSvc'); var svcId=svcSel.value;
+  var svc = (s.services.filter(function(x){return x.id===svcId})[0]) || {mins:s.work.slot};
+  var barberId=document.getElementById('admBarber').value; var barber=s.barbers.filter(function(x){return x.id===barberId})[0];
+  var date=document.getElementById('admDate').value; var box=document.getElementById('admSlots'); box.innerHTML='';
+  if(barber && isBarberClosed(barber,date)){ box.innerHTML='<div class="muted">Seçili usta bu gün kapalı.</div>'; return; }
+  var sh=s.work.start.split(':').map(Number), eh=s.work.end.split(':').map(Number);
+  var cur=new Date(date+"T"+pad(sh[0])+":"+pad(sh[1])); var end=new Date(date+"T"+pad(eh[0])+":"+pad(eh[1]));
+  var taken={}; s.bookings.forEach(function(b){ if(b.date===date && b.barberId===barberId) taken[b.time]=true; });
+  __admSel=null; document.getElementById('admSelInfo').textContent='—';
+  while(cur<end){
+    var t=pad(cur.getHours())+":"+pad(cur.getMinutes());
+    var btn=document.createElement('button'); btn.textContent=t; btn.className='slotBtn';
+    if(taken[t]){ btn.disabled=true; btn.title='Dolu'; }
+    btn.onclick=(function(time){ return function(){ __admSel={time:time, svcId:svcId, barberId:barberId, date:date}; document.getElementById('admSelInfo').textContent=date+" "+time; };})(t);
+    box.appendChild(btn); cur=new Date(cur.getTime()+ (svc.mins||s.work.slot)*60000);
+  }
+}
+function admConfirmBooking(){
+  if(!__admSel){ alert('Önce saat seçin'); return; }
+  var name=document.getElementById('admCName').value.trim();
+  var phone=document.getElementById('admCPhone').value.trim();
+  var note=document.getElementById('admNote').value.trim();
+  if(!name||!phone){ alert('Ad ve telefon gerekli'); return; }
+  var db=loadDB(), s=db[__shopId];
+  var exists=s.bookings.some(function(b){ return b.date===__admSel.date && b.time===__admSel.time && b.barberId===__admSel.barberId; });
+  if(exists){ alert('Bu saat dolu.'); makeAdmSlots(); return; }
+  s.bookings.push({ id:rid(), date:__admSel.date, time:__admSel.time, serviceId:__admSel.svcId, barberId:__admSel.barberId,
+    customer:{name:name, phone:phone, note:note}, status:'Beklemede', createdAt:new Date().toISOString() });
+  saveDB(db); alert('Randevu eklendi!'); document.getElementById('admCName').value=''; document.getElementById('admCPhone').value=''; document.getElementById('admNote').value=''; makeAdmSlots(); renderBookings();
+}
+
+/*** BOOKINGS LIST + FİLTRE + FİŞ/WHATSAPP ***/
+function renderBookings(){
+  var db=loadDB(), s=db[__shopId], box=document.getElementById("bookList"); box.innerHTML="";
+  var q=document.getElementById('fQuery').value.trim().toLowerCase();
+  var fFrom=document.getElementById('fFrom').value, fTo=document.getElementById('fTo').value;
+  var items=s.bookings.slice().reverse().filter(function(b){
+    var ok=true;
+    if(fFrom && b.date<fFrom) ok=false;
+    if(fTo && b.date>fTo) ok=false;
+    if(q){
+      var svc=s.services.filter(function(x){return x.id===b.serviceId})[0];
+      var br=s.barbers.filter(function(x){return x.id===b.barberId})[0];
+      var text=[b.customer.name,b.customer.phone,(svc?svc.name:''),(br?br.name:''),(b.status||'')].join(' ').toLowerCase();
+      if(text.indexOf(q)<0) ok=false;
+    }
+    return ok;
+  });
+  if(!items.length){ box.innerHTML='<div class="muted">Kayıt bulunamadı.</div>'; return; }
+  items.forEach(function(b){
+    var svc=s.services.filter(function(x){return x.id===b.serviceId})[0];
+    var br=s.barbers.filter(function(x){return x.id===b.barberId})[0];
+    var st=b.status||'Beklemede'; var stClass = st==='Onaylı'?'s-ok':(st==='İptal'?'s-cancel':'s-pending');
+    var price = svc ? (svc.price||0) : 0;
+    var row=document.createElement("div"); row.className="card";
+    row.innerHTML =
+      '<div class="row" style="justify-content:space-between">'+
+        '<div><b>'+b.customer.name+'</b> · <span class="muted">'+(b.customer.phone||'')+'</span></div>'+
+        '<div class="status '+stClass+'">'+st+'</div>'+
+      '</div>'+
+      '<div class="row muted">'+
+        '<div>'+b.date+' '+b.time+'</div>'+
+        '<div>• '+(br?br.name:'Usta')+'</div>'+
+        '<div>• '+(svc?svc.name:'Hizmet')+' ₺'+price+'</div>'+
+      '</div>'+
+      (b.customer.note?('<div class="row"><div class="badge">Not:</div><div>'+b.customer.note+'</div></div>'):'')+
+      '<div class="row" style="justify-content:flex-end;gap:6px;margin-top:6px">'+
+        '<button onclick="setStatus(\''+b.id+'\',\'Onaylı\')">Onayla</button>'+
+        '<button onclick="setStatus(\''+b.id+'\',\'İptal\')">İptal Et</button>'+
+        '<button onclick="printReceipt(\''+b.id+'\')">Fiş</button>'+
+        '<button onclick="shareWA(\''+b.id+'\')">WhatsApp</button>'+
+        '<button onclick="deleteBooking(\''+b.id+'\')">Sil</button>'+
+      '</div>';
+    box.appendChild(row);
+  });
+}
+document.getElementById('btnFilter').onclick=renderBookings;
+document.getElementById('btnClearFilter').onclick=function(){ document.getElementById('fFrom').value=''; document.getElementById('fTo').value=''; document.getElementById('fQuery').value=''; renderBookings(); };
+function setStatus(id, st){ var db=loadDB(), s=db[__shopId]; var i=s.bookings.findIndex(function(x){return x.id===id}); if(i<0) return; s.bookings[i].status=st; saveDB(db); renderBookings(); }
+function deleteBooking(id){ if(!confirm('Silinsin mi?')) return; var db=loadDB(), s=db[__shopId]; s.bookings = s.bookings.filter(function(x){return x.id!==id}); saveDB(db); renderBookings(); }
+function printReceipt(id){
+  var db=loadDB(), s=db[__shopId]; var b=s.bookings.filter(function(x){return x.id===id})[0];
+  var svc=s.services.filter(function(x){return x.id===b.serviceId})[0]; var br=s.barbers.filter(function(x){return x.id===b.barberId})[0];
+  var price = svc ? (svc.price||0) : 0;
+  var w=window.open('','PRINT','height=700,width=520');
+  w.document.write('<!doctype html><html><head><meta charset=utf-8><title>Randevu Fişi</title><style>body{font:14px Arial;padding:16px} .h{font-weight:bold;font-size:16px} .box{border:1px solid #ccc;border-radius:8px;padding:12px;margin-top:8px}</style></head><body>');
+  w.document.write('<div class="h">'+s.name+' — Randevu Fişi</div>');
+  w.document.write('<div class="box">Tarih/Saat: <b>'+b.date+' '+b.time+'</b><br>Usta: <b>'+(br?br.name:'')+'</b><br>Hizmet: <b>'+(svc?svc.name:'')+'</b> · Ücret: <b>₺'+price+'</b></div>');
+  w.document.write('<div class="box">Müşteri: <b>'+b.customer.name+'</b><br>Telefon: <b>'+b.customer.phone+'</b>'+(b.customer.note?('<br>Not: '+b.customer.note):'')+'<br>Durum: <b>'+(b.status||'Beklemede')+'</b></div>');
+  w.document.write('<div style="margin-top:12px">İşletme: '+(s.addr||'')+'<br>Oluşturma: '+(b.createdAt||'')+'</div>');
+  w.document.write('</body></html>'); w.document.close(); w.focus(); w.print(); w.close();
+}
+function shareWA(id){
+  var db=loadDB(), s=db[__shopId]; var b=s.bookings.filter(function(x){return x.id===id})[0];
+  var svc=s.services.filter(function(x){return x.id===b.serviceId})[0]; var br=s.barbers.filter(function(x){return x.id===b.barberId})[0];
+  var price = svc ? (svc.price||0) : 0;
+  var txt = 'Merhaba '+b.customer.name+'%0A%0A'+
+            s.name+' randevunuz:%0A'+
+            '• Tarih/Saat: '+b.date+' '+b.time+'%0A'+
+            '• Usta: '+(br?br.name:'')+'%0A'+
+            '• Hizmet: '+(svc?svc.name:'')+' (₺'+price+')%0A'+
+            (b.customer.note?('• Not: '+encodeURIComponent(b.customer.note)+'%0A'):'')+
+            'Durum: '+(b.status||'Beklemede')+'%0A%0ATeşekkürler!';
+  var url = 'https://wa.me/?text='+txt; window.open(url,'_blank');
+}
+
+/*** PUBLIC PAGE ***/
+function openPublic(id){
+  var db=loadDB(), s=db[id]; if(!s){ alert("İşletme bulunamadı"); return; }
+  window.__pubId=id; show("public");
+  document.getElementById("pubName").textContent=s.name; document.getElementById("pubAddr").textContent=s.addr||"";
+  var svc=document.getElementById("selSvc"), br=document.getElementById("selBarber");
+  svc.innerHTML=""; br.innerHTML="";
+  s.services.forEach(function(x){ var o=document.createElement("option"); o.value=x.id; o.textContent=x.name+" ("+x.mins+" dk)"; o.setAttribute('data-price', x.price||0); svc.appendChild(o); });
+  s.barbers.forEach(function(x){ var o=document.createElement("option"); o.value=x.id; o.textContent=x.name; br.appendChild(o); });
+  var d=document.getElementById("selDate"); var today=new Date(); today.setHours(0,0,0,0); var max=new Date(today); max.setDate(max.getDate()+(s.work.maxDays||14));
+  d.min=today.toISOString().slice(0,10); d.max=max.toISOString().slice(0,10); d.value=today.toISOString().slice(0,10);
+  function updatePrice(){ var opt=svc.options[svc.selectedIndex]; document.getElementById('pubPrice').textContent='₺'+(opt?opt.getAttribute('data-price'):0); }
+  svc.onchange=function(){ updatePrice(); makeSlots(); }; br.onchange=makeSlots; d.onchange=makeSlots; updatePrice(); makeSlots();
+}
+function makeSlots(){
+  var db=loadDB(), s=db[__pubId]; var svcSel=document.getElementById("selSvc"); var svcId=svcSel.value;
+  var svc=s.services.filter(function(x){return x.id===svcId})[0] || {mins:s.work.slot};
+  var br=document.getElementById("selBarber").value; var barber=s.barbers.filter(function(x){return x.id===br})[0];
+  var date=document.getElementById("selDate").value;
+  var box=document.getElementById("slots"); box.innerHTML="";
+  if(barber && isBarberClosed(barber,date)){ box.innerHTML='<div class="muted">Seçili usta bu gün kapalı.</div>'; return; }
+  var sh=s.work.start.split(":").map(Number), eh=s.work.end.split(":").map(Number);
+  var cur=new Date(date+"T"+pad(sh[0])+":"+pad(sh[1])), end=new Date(date+"T"+pad(eh[0])+":"+pad(eh[1]));
+  var taken={}; s.bookings.forEach(function(b){ if(b.date===date && (!br || b.barberId===br)) taken[b.time]=true; });
+  window.__sel=null; document.getElementById("selInfo").textContent="—";
+  while(cur<end){
+    var t=pad(cur.getHours())+":"+pad(cur.getMinutes());
+    var btn=document.createElement("button"); btn.textContent=t; btn.className='slotBtn';
+    if(taken[t]){ btn.disabled=true; btn.title="Dolu"; }
+    btn.onclick=(function(time){ return function(){ __sel={time:time, svcId:svcId, barberId:br, date:date}; document.getElementById("selInfo").textContent=date+" "+time; }; })(t);
+    box.appendChild(btn);
+    cur=new Date(cur.getTime()+(svc.mins||s.work.slot)*60000);
+  }
+}
+document.getElementById("btnBook").onclick=function(){
+  if(!__sel){ alert("Önce saat seçin"); return; }
+  var n=document.getElementById("cName").value.trim(); var p=document.getElementById("cPhone").value.trim();
+  var note=document.getElementById("cNote").value.trim();
+  if(!n||!p){ alert("Ad ve telefon gerekli"); return; }
+  var db=loadDB(), s=db[__pubId];
+  var exists=s.bookings.some(function(b){ return b.date===__sel.date && b.time===__sel.time && b.barberId===__sel.barberId; });
+  if(exists){ alert("Bu saat dolu."); makeSlots(); return; }
+  s.bookings.push({id:rid(),date:__sel.date,time:__sel.time,serviceId:__sel.svcId,barberId:__sel.barberId,customer:{name:n,phone:p,note:note},status:'Beklemede',createdAt:new Date().toISOString()});
+  saveDB(db); alert("Randevunuz alındı! (Beklemede)"); document.getElementById("cName").value=""; document.getElementById("cPhone").value=""; document.getElementById("cNote").value=""; makeSlots();
+};
+
+/*** ROUTER & LOKAL KISAYOL ***/
+function renderLocal(){
+  var box=document.getElementById("localShops"); box.innerHTML="";
+  var db=loadDB(); Object.keys(db).forEach(function(k){
+    var a=document.createElement("button"); a.className="chip"; a.textContent="👤 "+db[k].name; a.onclick=function(){ openPublic(k); };
+    var b=document.createElement("button"); b.className="chip"; b.textContent="🔐 Admin"; b.onclick=function(){ __shopId=k; openOwner(); };
+    var w=document.createElement("div"); w.className="row"; w.appendChild(a); w.appendChild(b); box.appendChild(w);
+  });
+}
+(function(){
+  renderLocal();
+  var q=location.search.replace("?","").split("&").reduce(function(m,p){var t=p.split("="); if(t[0]) m[t[0]]=decodeURIComponent(t[1]||""); return m; },{});
+  if(q.shop){ openPublic(q.shop); }
+  else if(q.admin){ __shopId=q.admin; openOwner(); }
+})();
+</script>
+</body>
+</html>
